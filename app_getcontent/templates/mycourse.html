@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% load app_getcontent_filter %}
+
+
+{% block content %}
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="#">我的排課</a>
+    </li>
+    {# <li class="breadcrumb-item active">My Dashboard</li> #}
+  </ol>
+
+  <div class="card mb-3">
+    <div class="card-header">已開設課程</div>
+    <div class="card-body">
+      <table class="table table-hover table-bordered">
+        <thead>
+          <tr>
+            <th>id</th>
+            <th>課程名稱</th>
+            <th>課程對象</th>
+            <th>星期</th>
+            <th>節次</th>
+            <th>場地</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if courses %}
+            {% for course in courses %}
+            <tr>
+              <td>{{ forloop.counter}}</td>
+              <td>{{ course.course}}</td>
+              <td>{{ course.forwhom }}</td>
+              <td>{{ course.week }}</td>
+              <td>{{ course.time|course_time }}</td>
+              <td>{{ course.place }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="6">無已開設課程</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <hr>
+  <div class="row mb-3">
+    <div id="mycourse" class="col-6">
+      <form action="/test/" method="POST"> {% csrf_token%}
+        <div class="card mb-3 course-setting {% if forloop.counter > 1 %}d-none{% endif %}">
+          <div class="card-header">課程</div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group col-sm-6">
+                <label for="course_name">課程名稱</label>
+                <select id="course_name" name="course.name" class="form-control">
+                  {% for course in course_name %}
+                    <option value="{{ course.id }}">{{ course.course_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group col-sm-6">
+                <label for="course_forwhom">課程對象</label>
+                <select id="course_forwhom" name="course.forwhom" class="form-control">
+                  {% for whom in course_for %}
+                    <option value="{{ whom.id }}">{{ whom.forwhom }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-sm-4">
+                <label for="course_place">場地</label>
+                <select id="course_place" name="course.place" class="form-control">
+                  <option value="0" disabled selected>--請選擇場地--</option>
+                {% for place in places %}
+                  <option value="{{ place.id }}">
+                    {{ place.first_num }}. {{ place.place }}
+                    {% if place.note %}
+                      ({{ place.note }})
+                    {% endif %}
+                  </option>
+                {% endfor %}
+                </select>
+              </div>
+              <div class="form-group col-sm-4">
+                <label for="course_week">星期</label>
+                <select id="course_week" name="course.week" class="form-control">
+                  <option value="0" disabled selected>--請選擇星期--</option>
+                {% for r in r5 %}
+                  <option value="{% cycle '1' '2' '3' '4' '5' %}">{% cycle '一' '二' '三' '四' '五' %}</option>
+                {% endfor %}
+                </select>
+              </div>
+              <div class="form-group col-sm-4">
+                <label for="course_time">節次</label>
+                <select id="course_time" name="course.time" class="form-control">
+                  <option value="0" disabled selected>--請選擇節次--</option>
+                {% for r in r5 %}
+                  <option value="{% cycle '1' '2' '3' '4' '5' %}">{% cycle '一二' '三四' '五六' '七八' '九十' %}</option>
+                {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# <button id="btn-addCourse" type="button" class="btn btn-primary btn-sm mb-3"><i class="fa fa-plus"></i> 新增一門課程</button> #}
+        <button id="btn-save" type="submit" class="btn btn-primary btn-sm mb-3 float-right"><i class="fa fa-save"></i> 儲存</button>
+      </form>
+    </div>
+
+    <div class="col-6">
+      <div class="card">
+        <div class="card-header">場地使用狀況</div>
+        <div class="card-body">
+          <table class="table table-bordered" id="place_available">
+            <thead>
+              <tr>
+                <th style="width:20%;">
+                  <div class="slash">
+                    <div class="slash01">節次</div>
+                    <div class="slash02">星期</div>
+                  </div>
+                </th>
+                {% for _ in r5 %}
+                <th style="width:16%">{% cycle '一' '二' '三' '四' '五' %}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for _ in r5 %}
+              <tr>
+                <td>{% cycle '一二' '三四' '五六' '七八' '九十' %}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+
+
+{% block style %}
+<style>
+  table thead th, table tbody td {
+    vertical-align: middle!important;
+    text-align: center!important;
+  }
+  .slash{
+    position:relative;
+    width:100px;
+    height:40px;
+    box-sizing:border-box;
+    line-height:120px;
+    background: linear-gradient(45deg, transparent 49.5%, #212121 49.5%, transparent 50.5%, transparent 50.5%);
+  }
+  .slash01{
+    position: absolute;
+    top: -35px;
+  }
+  .slash02{
+    position: absolute;
+    top: -60px;
+    left: 60px;
+  }
+
+  .wrong {
+    border-color:#FF0000;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 0, 0, 0.6);
+  }
+</style>
+{% endblock style %}
+
+  
+{% block script %}
+<script>
+  $(document).ready(function(){
+    $("#mycourse>form").attr('action', rootURL + $("#mycourse>form").attr('action'));
+    console.log($("#mycourse>form").attr('action'))
+
+    $("#course_place").change(function(){
+      $("#place_available>tbody>tr>td:nth-child(n+2)").text("");
+      $.ajax({
+        url : rootURL + '/content/available_place',
+        type: "GET",
+        data: {'place':$(this).val()},
+        dataType: 'json',
+        success: function(res){
+          res['place_data'].forEach((d)=>{
+            $('#place_available > tbody > tr').eq(d['time']-1).find('td').eq(d['week']).text("已使用");
+          });
+        }
+
+      });
+    })
+
+    $("#btn-save").click(function(e){
+      if(!(($("#course_place").val())&&($("#course_week").val())&&($("#course_time").val()))){
+        if ($("#course_place").val()==null){
+          $("#course_place").addClass('wrong');
+          setTimeout(function(){$("#course_place").removeClass('wrong');},2000);
+        }
+        if ($("#course_week").val()==null){
+          $("#course_week").addClass('wrong');
+          setTimeout(function(){$("#course_week").removeClass('wrong');},2000);
+        }
+        if ($("#course_time").val()==null){
+          $("#course_time").addClass('wrong');
+          setTimeout(function(){$("#course_time").removeClass('wrong');},2000);
+        }
+        e.preventDefault();
+      }
+    });
+  //   $("#btn-addCourse").click(function(){
+  //     $("#mycourse .course-setting.d-none").eq(0).removeClass("d-none");
+  //   });
+
+  //   $("#mycourse div.card-header button.close").click(function(){
+  //     console.log($(this))
+  //     if($("#mycourse .course-setting:not(.d-none)").length==1)
+  //       return 0;
+  //     else{
+  //       $(this).closest("div.card.course-setting").addClass("d-none");
+  //     }
+  //   });
+  });
+</script>
+{% endblock script %}
+

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="#">目前排課狀況</a>
+    </li>
+    {# <li class="breadcrumb-item active">My Dashboard</li> #}
+  </ol>
+  <div class="row" style="overflow-x:scroll;">
+    {# <div class="col-1"></div> #}
+    <div id="arrange_table" class="col-12 px-5">
+      <table class="table">
+        <thead>
+          <tr>
+            <th rowspan="2" style="width:10%;">職稱</th>
+            <!-- <th rowspan="2">姓名</th> -->
+            <th>星期</th>
+            <th colspan="5">一</th>
+            <th colspan="5">二</th>
+            <th colspan="5">三</th>
+            <th colspan="5">四</th>
+            <th colspan="5">五</th>
+          </tr>
+          <tr>
+            <th>
+              <div class="slash">
+                <div class="slash01">姓名</div>
+                <div class="slash02">節次</div>
+              </div>
+            </th>
+            {% for _ in range5 %}
+              {% for _ in range5 %}
+                <th class="table-th-width">
+                  {% cycle '一二' '三四' '五六' '七八' '九十' %}
+                </th>
+              {% endfor %}
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for teacher in teacher_info %}
+            <tr id="user_{{ teacher.userid.id }}">
+              <td>
+                {{ teacher.title_teacher }} 
+                {% if teacher.title_peoffice %}
+                  <br>兼{{ teacher.title_peoffice }}
+                {% endif %}
+              </td>
+              <td>{{ teacher }}</td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+              <td class='table-sm-font'></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock content %}
+
+
+{% block style %}
+<style>
+  table thead th, table tbody td {
+    vertical-align: middle!important;
+    text-align: center!important;
+  }
+  tbody {
+    border-bottom: 1px solid #dee2e6;
+  }
+  .slash{
+    position:relative;
+    width:100px;
+    height:40px;
+    box-sizing:border-box;
+    line-height:120px;
+    background: linear-gradient(45deg, transparent 49.5%, #212121 49.5%, transparent 50.5%, transparent 50.5%);
+  }
+  .slash01{
+    position: absolute;
+    top: -35px;
+  }
+  .slash02{
+    position: absolute;
+    top: -60px;
+    left: 60px;
+  }
+
+  #arrange_table td.table-sm-font{
+    font-size: 0.9rem;
+    padding: 2px;
+    border: 1px solid #dee2e6;
+  }
+
+</style>
+{% endblock style %}
+
+{% block script %}
+<script>
+  $(document).ready(function(){
+    $.ajax({
+      url : rootURL + '/content/arrange_table/',
+      type : 'GET',
+      dataType:'json',
+      success : function (res) {
+        res['course_data'].forEach((d)=>{
+          rowID = '#user_' + d['userid']
+          console.log(rowID)
+          $(rowID).find("td").eq(d['course_time']+1).html(d['course_for']+'<br>'+d['course_type']+'<br>'+d['course_place'])
+          
+        })
+      }
+    });
+  });
+</script>
+{% endblock script %}
