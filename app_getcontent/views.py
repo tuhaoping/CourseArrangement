@@ -59,11 +59,11 @@ def get_mycourse(request):
 
 
 @login_required
-def test(request):
+def create_new_course(request):
 	user = request.user
 	course = CourseInfo(**request.POST)
 
-	course.info
+	# course.info
 	# print(user.id)
 	# print(TeacherList.objects.get(pk=user.id))
 	course.create_course(user)
@@ -83,7 +83,7 @@ class CourseInfo():
 	
 	@property
 	def info(self):
-		print(type(self.name),self.place,self.forwhom,self.week,self.time)
+		print(self.name,self.place,self.forwhom,self.week,self.time)
 
 	def create_course(self, user):
 		OpenCourse.objects.create(

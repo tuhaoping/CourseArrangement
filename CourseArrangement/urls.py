@@ -17,7 +17,7 @@ from django.conf.urls import url
 from django.contrib import admin
 from .views import homePage
 from django.contrib.auth.views import login, logout
-from app_getcontent.views import get_arrange_table, get_available_place, get_mycourse, test
+from app_getcontent.views import get_arrange_table, get_available_place, get_mycourse, create_new_course
 from .settings import HOME_URL
 
 admin.autodiscover()
@@ -34,5 +34,5 @@ urlpatterns = [
     url(r'^content/available_place/$', get_available_place),
     url(r'^mycourse/$', get_mycourse),
 
-    url(r'^test/', test)
+    url(r'^test/', create_new_course)
 ]

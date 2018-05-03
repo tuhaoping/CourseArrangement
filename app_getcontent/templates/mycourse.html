@@ -87,18 +87,12 @@
                 <label for="course_week">星期</label>
                 <select id="course_week" name="course.week" class="form-control">
                   <option value="0" disabled selected>--請選擇星期--</option>
-                {% for r in r5 %}
-                  <option value="{% cycle '1' '2' '3' '4' '5' %}">{% cycle '一' '二' '三' '四' '五' %}</option>
-                {% endfor %}
                 </select>
               </div>
               <div class="form-group col-sm-4">
                 <label for="course_time">節次</label>
                 <select id="course_time" name="course.time" class="form-control">
                   <option value="0" disabled selected>--請選擇節次--</option>
-                {% for r in r5 %}
-                  <option value="{% cycle '1' '2' '3' '4' '5' %}">{% cycle '一二' '三四' '五六' '七八' '九十' %}</option>
-                {% endfor %}
                 </select>
               </div>
             </div>
@@ -112,7 +106,7 @@
 
     <div class="col-6">
       <div class="card">
-        <div class="card-header">場地使用狀況</div>
+        <div class="card-header" id="place_available_header">場地使用狀況</div>
         <div class="card-body">
           <table class="table table-bordered" id="place_available">
             <thead>
@@ -185,23 +179,48 @@
 <script>
   $(document).ready(function(){
     $("#mycourse>form").attr('action', rootURL + $("#mycourse>form").attr('action'));
-    console.log($("#mycourse>form").attr('action'))
 
     $("#course_place").change(function(){
       $("#place_available>tbody>tr>td:nth-child(n+2)").text("");
+      $("#place_available_header").text("場地使用狀況 - " + $("#course_place option:selected").text());
       $.ajax({
         url : rootURL + '/content/available_place',
         type: "GET",
         data: {'place':$(this).val()},
         dataType: 'json',
         success: function(res){
-          res['place_data'].forEach((d)=>{
+          unavailable_place = res['place_data'];
+          unavailable_place.forEach((d)=>{
             $('#place_available > tbody > tr').eq(d['time']-1).find('td').eq(d['week']).text("已使用");
           });
         }
-
       });
-    })
+
+      $("#course_week>option").remove();   //
+      $("#course_week").append($("<option disabled selected></option>").attr("value", 0).text("--請選擇星期--"));
+      course_week_array.forEach((arg)=>{
+        $("#course_week").append($("<option></option>").attr("value", arg['val']).text(arg['text']));
+      });
+      $("#course_time>option").remove();   //
+      $("#course_time").append($("<option disabled selected></option>").attr("value", 0).text("--請選擇節次--"));
+
+    });
+
+    $("#course_week").change(function(){
+      let week = $(this).val();
+      $("#course_time>option").remove();   //
+      $("#course_time").append($("<option disabled selected></option>").attr("value", 0).text("--請選擇節次--"));
+
+      let unavailable_time = unavailable_place.filter(
+        function(item, index, array){return item['week']== week;}).map(
+          function(i){return i['time'];});
+
+      course_time_array.forEach((arg)=>{
+        if (!unavailable_time.includes(arg['val']))
+          $("#course_time").append($("<option></option>").attr("value", arg['val']).text(arg['text']));
+      });
+
+    });
 
     $("#btn-save").click(function(e){
       if(!(($("#course_place").val())&&($("#course_week").val())&&($("#course_time").val()))){
