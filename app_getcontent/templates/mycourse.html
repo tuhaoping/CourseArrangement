@@ -22,6 +22,7 @@
             <th>星期</th>
             <th>節次</th>
             <th>場地</th>
+            <th>其他</th>
           </tr>
         </thead>
         <tbody>
@@ -34,6 +35,10 @@
               <td>{{ course.week }}</td>
               <td>{{ course.time|course_time }}</td>
               <td>{{ course.place }}</td>
+              <td>
+                <a href="#" data-toggle="modal" data-target="#course_modify_modal">修改</a>
+                <a href="#" data-toggle="modal" data-target="#course_del_modal">刪除</a>
+              </td>
             </tr>
             {% endfor %}
           {% else %}
@@ -47,7 +52,7 @@
   <div class="row mb-3">
     <div id="mycourse" class="col-6">
       <form action="/test/" method="POST"> {% csrf_token%}
-        <div class="card mb-3 course-setting {% if forloop.counter > 1 %}d-none{% endif %}">
+        <div class="card mb-3 course-setting">
           <div class="card-header">課程</div>
           <div class="card-body">
             <div class="form-row">
@@ -135,6 +140,96 @@
               {% endfor %}
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="course_del_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Warning</h5>
+          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          確定刪除課程？
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+          <a class="btn btn-primary" href="#">確定</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="course_modify_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Warning</h5>
+          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="card mb-3 course-setting">
+            <div class="card-header">課程</div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group col-sm-6">
+                  <label for="course_name_modify">課程名稱</label>
+                  <select id="course_name_modify" name="course.name" class="form-control">
+                    {% for course in course_name %}
+                      <option value="{{ course.id }}">{{ course.course_name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group col-sm-6">
+                  <label for="course_forwhom_modify">課程對象</label>
+                  <select id="course_forwhom_modify" name="course.forwhom" class="form-control">
+                    {% for whom in course_for %}
+                      <option value="{{ whom.id }}">{{ whom.forwhom }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-sm-4">
+                  <label for="course_place_modify">場地</label>
+                  <select id="course_place_modify" name="course.place" class="form-control">
+                    <option value="0" disabled selected>--請選擇場地--</option>
+                  {% for place in places %}
+                    <option value="{{ place.id }}">
+                      {{ place.first_num }}. {{ place.place }}
+                      {% if place.note %}
+                        ({{ place.note }})
+                      {% endif %}
+                    </option>
+                  {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group col-sm-4">
+                  <label for="course_week_modify">星期</label>
+                  <select id="course_week_modify" name="course.week" class="form-control">
+                    <option value="0" disabled selected>--請選擇星期--</option>
+                  </select>
+                </div>
+                <div class="form-group col-sm-4">
+                  <label for="course_time_modify">節次</label>
+                  <select id="course_time_modify" name="course.time" class="form-control">
+                    <option value="0" disabled selected>--請選擇節次--</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+          <a class="btn btn-primary" href="#">儲存</a>
         </div>
       </div>
     </div>
