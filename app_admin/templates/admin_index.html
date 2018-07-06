@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 {% load static %}
 {% load app_getcontent_filter %}
 
@@ -243,6 +243,7 @@
             h_text.push(d['course_place']);
         
           $(rowID).find("td").eq(d['course_time']+1).html(h_text.join("<br>"))
+          
         })
       }
     });

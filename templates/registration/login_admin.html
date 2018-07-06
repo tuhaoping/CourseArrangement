@@ -10,14 +10,17 @@
 </head>
 <body class="bg-dark">
   <div class="container">
-    <div class="text-center"><h1 style="color:white">國立成功大學體育排課系統</h1></div>
+    <div class="text-center"><h1 style="color:white">國立成功大學體育排課後台系統</h1></div>
     <div class="card card-login mx-auto mt-5">
       <div class="card-header">登入</div>
       <div class="card-body">
         {% if form.errors %}
           <p><span style="color:red">帳號或密碼輸入錯誤。</span></p>
         {% endif %}
-        <form action="" method="post">
+        {% if no_perm %}
+          <p><span style="color:red">沒有權限，請登入其他帳戶。</span></p>
+        {% endif %}
+        <form action="/admin/accounts/login/?next={{next_url}}" method="post">
           {% csrf_token %}
           <div class="form-group">
             <label for="username">用戶名稱</label>

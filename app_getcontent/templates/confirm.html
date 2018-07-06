@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load app_getcontent_filter %}
+
+{% block content %}
+	<ol class="breadcrumb">
+		<li class="breadcrumb-item">
+			<a href="#">排課確認</a>
+		</li>
+		{% comment %} <li class="breadcrumb-item active"></li> {% endcomment %}
+    </ol>
+    <div class="col-12">
+        <div class="card mb-3">
+            <div class="card-header">我的課表</div>
+            <div class="card-body">
+                {% if semester == '1' %}
+                大一：{{grade1_courses.count}}　大二：{{courses.count}}<br>
+                {% else %}
+                    {% for grade in grade_num %}
+                        {{grade.grade}}：{{grade.num}} <br>
+                    {% endfor %}
+                {% endif %}
+                <br>
+                <table class="table table-bordered" id="couese_sch">
+                    <thead>
+                        <tr>
+                            <th style="width:10%;">
+                                <div class="slash mx-auto">
+                                    <div class="slash01">節次</div>
+                                    <div class="slash02">星期</div>
+                                </div>
+                            </th>
+                            {% for _ in r5 %}
+                            <th style="width:16%">{% cycle '一' '二' '三' '四' '五' %}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for _ in r5 %}
+                        <tr>
+                            <td>{% cycle '一二' '三四' '五六' '七八' '九十' %}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if perms.app_getcontent.add_opencourse %}
+            <div class="card-footer text-center">
+                <a href="#" class="btn btn-warning" data-toggle="modal" data-target="#arrange_done_modal">完成排課</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if perms.app_getcontent.add_opencourse %}
+	<!-- 排課完成 Modal -->
+	<form action="/arrangedone/" method="POST"> {% csrf_token %}
+	<div class="modal fade" id="arrange_done_modal" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Warning</h5>
+					<button class="close" type="button" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					確定排課完成即<span style="color:red;">無法進行異動</span>，若有需要請聯絡管理員。
+				</div>
+				<div class="modal-footer">
+					<input type="hidden" name='openid'>
+					<button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+					<input type="submit" class="btn btn-warning" value="確定完成">
+					{% comment %} <input  class="btn btn-primary" href="#">確定</input> {% endcomment %}
+				</div>
+			</div>
+		</div>
+	</div>
+	</form>
+    <!-- ./排課完成 Modal -->
+    {% endif %}
+{% endblock content %}
+    
+
+{% block style %}
+<style>
+	table thead th, table tbody td {
+		vertical-align: middle!important;
+		text-align: center!important;
+	}
+	.slash{
+		position:relative;
+		width:100px;
+		height:40px;
+		box-sizing:border-box;
+		line-height:120px;
+		background: linear-gradient(45deg, transparent 49.5%, #212121 49.5%, transparent 50.5%, transparent 50.5%);
+	}
+	.slash01{
+		position: absolute;
+		top: -35px;
+	}
+	.slash02{
+		position: absolute;
+		top: -60px;
+		left: 60px;
+	}
+
+</style>
+{% endblock style %}
+
+
+{% block script %}
+<script>
+    {% if semester == '1' %}
+        {% for course in grade1_courses %}
+            $("#couese_sch tbody").find('tr').eq({{course.time}}-1).find('td').eq({{course.week}}).html("課程：大一體育<br>對象：大一<br>系所：" + "{{course.dep}}");
+        {% endfor %}
+    {% endif %}
+
+    {% for course in courses %}
+        $("#couese_sch tbody").find('tr').eq({{course.time}}-1).find('td').eq({{course.week}}).html("課程：{{course.course }}<br>對象：{{course.forwhom }}<br>地點：{{course.place}}");
+    {% endfor %}
+        
+</script>
+{% endblock script %}
+    

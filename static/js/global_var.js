@@ -14,3 +14,11 @@ var course_time_array = new Array(
 		{'val':4, 'text':'七八'},
 		{'val':5, 'text':'九十'}
 	);
+var modify_course = {
+	'courseid':'',
+	'forwhom':'',
+	'isEng':'',
+	'place':'',
+	'week':'',
+	'time':'',
+}

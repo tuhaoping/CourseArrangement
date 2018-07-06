@@ -1,352 +1,648 @@
 {% extends "base.html" %}
 {% load app_getcontent_filter %}
+{% load static %}
 
 
 {% block content %}
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item">
-      <a href="#">我的排課</a>
-    </li>
-    {# <li class="breadcrumb-item active">My Dashboard</li> #}
-  </ol>
+	<ol class="breadcrumb">
+		<li class="breadcrumb-item">
+			<a href="#">我的排課</a>
+		</li>
+		{% if semester == '1' %}
+		<li class="breadcrumb-item active">大二體育排課</li>
+		{% endif %}
+	</ol>
 
-  <div class="card mb-3">
-    <div class="card-header">已開設課程</div>
-    <div class="card-body">
-      <table class="table table-hover table-bordered">
-        <thead>
-          <tr>
-            <th>id</th>
-            <th>課程名稱</th>
-            <th>課程對象</th>
-            <th>星期</th>
-            <th>節次</th>
-            <th>場地</th>
-            <th>其他</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% if courses %}
-            {% for course in courses %}
-            <tr>
-              <td>{{ forloop.counter}}</td>
-              <td>{{ course.course}}</td>
-              <td>{{ course.forwhom }}</td>
-              <td>{{ course.week }}</td>
-              <td>{{ course.time|course_time }}</td>
-              <td>{{ course.place }}</td>
-              <td>
-                <a href="#" data-toggle="modal" data-target="#course_modify_modal">修改</a>
-                <a href="#" data-toggle="modal" data-target="#course_del_modal">刪除</a>
-              </td>
-            </tr>
-            {% endfor %}
-          {% else %}
-            <tr><td colspan="6">無已開設課程</td></tr>
-          {% endif %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <hr>
-  <div class="row mb-3">
-    <div id="mycourse" class="col-6">
-      <form action="/test/" method="POST"> {% csrf_token%}
-        <div class="card mb-3 course-setting">
-          <div class="card-header">課程</div>
-          <div class="card-body">
-            <div class="form-row">
-              <div class="form-group col-sm-6">
-                <label for="course_name">課程名稱</label>
-                <select id="course_name" name="course.name" class="form-control">
-                  {% for course in course_name %}
-                    <option value="{{ course.id }}">{{ course.course_name }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="form-group col-sm-6">
-                <label for="course_forwhom">課程對象</label>
-                <select id="course_forwhom" name="course.forwhom" class="form-control">
-                  {% for whom in course_for %}
-                    <option value="{{ whom.id }}">{{ whom.forwhom }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group col-sm-4">
-                <label for="course_place">場地</label>
-                <select id="course_place" name="course.place" class="form-control">
-                  <option value="0" disabled selected>--請選擇場地--</option>
-                {% for place in places %}
-                  <option value="{{ place.id }}">
-                    {{ place.first_num }}. {{ place.place }}
-                    {% if place.note %}
-                      ({{ place.note }})
-                    {% endif %}
-                  </option>
-                {% endfor %}
-                </select>
-              </div>
-              <div class="form-group col-sm-4">
-                <label for="course_week">星期</label>
-                <select id="course_week" name="course.week" class="form-control">
-                  <option value="0" disabled selected>--請選擇星期--</option>
-                </select>
-              </div>
-              <div class="form-group col-sm-4">
-                <label for="course_time">節次</label>
-                <select id="course_time" name="course.time" class="form-control">
-                  <option value="0" disabled selected>--請選擇節次--</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
+	<div class="card mb-3">
+		<div class="card-header">已開設課程 &nbsp;&nbsp;
+			(
+			{% for grade in grade_num %}
+				{{grade.grade}}：{{grade.num}}
+				{% if not forloop.last %}，{% endif %}
+			{% endfor %}
+			)
+		</div>
+		<div class="card-body">
+			<table class="table table-hover table-bordered">
+				<thead>
+					<tr>
+						<th>課程名稱</th>
+						<th>課程對象</th>
+						<th>英語授課</th>
+						<th>星期</th>
+						<th>節次</th>
+						<th>場地</th>
+						{% if perms.app_getcontent.add_opencourse %}
+						<th>其他</th>
+						{% endif %}
+					</tr>
+				</thead>
+				<tbody>
+					{% if courses %}
+						{% for course in courses %}
+						<tr>
+							<td>{{ course.course}}</td>
+							<td>{{ course.forwhom }}</td>
+							{% if course.isEng %}
+							<td>是</td>
+							{% else %}
+							<td>否</td>
+							{% endif %}
+							<td>{{ course.week }}</td>
+							<td>{{ course.time|course_time }}</td>
+							<td>{{ course.place }}</td>
+							{% if perms.app_getcontent.add_opencourse %}
+							<td>
+								<a class="course_modify" href="#" data-toggle="modal" data-target="#course_modify_modal" data-openid="{{course.id}}" data-courseid="{{course.course.id}}" data-forwhom="{{course.forwhom.id}}" data-week="{{course.week}}" data-time="{{course.time}}" data-iseng="{{course.isEng}}" data-place="{{course.place.id}}">修改</a>
+								<a class="course_del" href="#" data-toggle="modal" data-target="#course_del_modal" data-openid="{{course.id}}">刪除</a>
+							</td>
+							{% endif %}
+						</tr>
+						{% endfor %}
+					{% else %}
+						{% if perms.app_getcontent.add_opencourse %}
+						<tr><td colspan="7">無已開設課程</td></tr>
+						{% else %}
+						<tr><td colspan="6">無已開設課程</td></tr>
+						{% endif %}
+					{% endif %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<hr>
 
-        {# <button id="btn-addCourse" type="button" class="btn btn-primary btn-sm mb-3"><i class="fa fa-plus"></i> 新增一門課程</button> #}
-        <button id="btn-save" type="submit" class="btn btn-primary btn-sm mb-3 float-right"><i class="fa fa-save"></i> 儲存</button>
-      </form>
-    </div>
+	{% if perms.app_getcontent.add_opencourse %}
+	<div class="row mb-3">
+		<div id="mycourse" class="col-6">
+			<form action="/test/" method="POST"> {% csrf_token %}
+				<div class="card mb-3 course-setting">
+					<div class="card-header">課程</div>
+					<div class="card-body">
+						<div class="form-row">
+							<div class="form-group col-sm-4">
+								<label for="course_forwhom">課程對象</label>
+								<select id="course_forwhom" name="course.forwhom" class="form-control">
+									<option value="0" disabled selected>--請選擇課程對象--</option>
+									{% for whom in course_for %}
+										<option value="{{ whom.id }}">{{ whom.forwhom }}</option>
+									{% endfor %}
+								</select>
+							</div>
+							<div class="form-group col-sm-4">
+								<label for="course_name">課程名稱</label>
+								<select id="course_name" name="course.name" class="form-control">
+									<option value="0" disabled selected>--請選擇課程名稱--</option>
+								</select>
+							</div>
+							<div class="form-group col-sm-4">
+								<label for="course_isEng">英語授課</label>
+								<select id="course_isEng" name="course.isEng" class="form-control">
+									<option value="1">是</option>
+									<option value="0" selected>否</option>
+								</select>
+							</div>
+						</div>
+						<div class="form-row">
+							<div class="form-group col-sm-4">
+								<label for="course_place">場地</label>
+								<select id="course_place" name="course.place" class="form-control">
+									<option value="0" disabled selected>--請選擇場地--</option>
+								{% comment %} {% for place in places %}
+									<option value="{{ place.id }}">
+										{{ place.first_num }}. {{ place.place }}
+										{% if place.note %}
+											({{ place.note }})
+										{% endif %}
+									</option>
+								{% endfor %} {% endcomment %}
+								</select>
+							</div>
+							<div class="form-group col-sm-4">
+								<label for="course_week">星期</label>
+								<select id="course_week" name="course.week" class="form-control">
+									<option value="0" disabled selected>--請選擇星期--</option>
+								</select>
+							</div>
+							<div class="form-group col-sm-4">
+								<label for="course_time">節次</label>
+								<select id="course_time" name="course.time" class="form-control">
+									<option value="0" disabled selected>--請選擇節次--</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				</div>
 
-    <div class="col-6">
-      <div class="card">
-        <div class="card-header" id="place_available_header">場地使用狀況</div>
-        <div class="card-body">
-          <table class="table table-bordered" id="place_available">
-            <thead>
-              <tr>
-                <th style="width:20%;">
-                  <div class="slash">
-                    <div class="slash01">節次</div>
-                    <div class="slash02">星期</div>
-                  </div>
-                </th>
-                {% for _ in r5 %}
-                <th style="width:16%">{% cycle '一' '二' '三' '四' '五' %}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for _ in r5 %}
-              <tr>
-                <td>{% cycle '一二' '三四' '五六' '七八' '九十' %}</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+				<button id="btn-save" type="submit" class="btn btn-primary btn-sm mb-3 float-right"><i class="fa fa-save"></i> 儲存</button>
+			</form>
+		</div>
 
-  <div class="modal fade" id="course_del_modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Warning</h5>
-          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          確定刪除課程？
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
-          <a class="btn btn-primary" href="#">確定</a>
-        </div>
-      </div>
-    </div>
-  </div>
+		<div class="col-6">
+			<div class="card">
+				<div class="card-header" id="place_available_header">場地使用狀況</div>
+				<div class="card-body">
+					<table class="table table-bordered" id="place_available">
+						<thead>
+							<tr>
+								<th style="width:20%;">
+									<div class="slash">
+										<div class="slash01">節次</div>
+										<div class="slash02">星期</div>
+									</div>
+								</th>
+								{% for _ in r5 %}
+								<th style="width:16%">{% cycle '一' '二' '三' '四' '五' %}</th>
+								{% endfor %}
+							</tr>
+						</thead>
+						<tbody>
+							{% for _ in r5 %}
+							<tr>
+								<td>{% cycle '一二' '三四' '五六' '七八' '九十' %}</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	{% endif %}
 
-  <div class="modal fade" id="course_modify_modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Warning</h5>
-          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="card mb-3 course-setting">
-            <div class="card-header">課程</div>
-            <div class="card-body">
-              <div class="form-row">
-                <div class="form-group col-sm-6">
-                  <label for="course_name_modify">課程名稱</label>
-                  <select id="course_name_modify" name="course.name" class="form-control">
-                    {% for course in course_name %}
-                      <option value="{{ course.id }}">{{ course.course_name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <div class="form-group col-sm-6">
-                  <label for="course_forwhom_modify">課程對象</label>
-                  <select id="course_forwhom_modify" name="course.forwhom" class="form-control">
-                    {% for whom in course_for %}
-                      <option value="{{ whom.id }}">{{ whom.forwhom }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group col-sm-4">
-                  <label for="course_place_modify">場地</label>
-                  <select id="course_place_modify" name="course.place" class="form-control">
-                    <option value="0" disabled selected>--請選擇場地--</option>
-                  {% for place in places %}
-                    <option value="{{ place.id }}">
-                      {{ place.first_num }}. {{ place.place }}
-                      {% if place.note %}
-                        ({{ place.note }})
-                      {% endif %}
-                    </option>
-                  {% endfor %}
-                  </select>
-                </div>
-                <div class="form-group col-sm-4">
-                  <label for="course_week_modify">星期</label>
-                  <select id="course_week_modify" name="course.week" class="form-control">
-                    <option value="0" disabled selected>--請選擇星期--</option>
-                  </select>
-                </div>
-                <div class="form-group col-sm-4">
-                  <label for="course_time_modify">節次</label>
-                  <select id="course_time_modify" name="course.time" class="form-control">
-                    <option value="0" disabled selected>--請選擇節次--</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
-          <a class="btn btn-primary" href="#">儲存</a>
-        </div>
-      </div>
-    </div>
-  </div>
+	{% if perms.app_getcontent.add_opencourse %}
+	<!-- 排課完成 Modal -->
+	<form action="/arrangedone/" method="POST"> {% csrf_token %}
+	<div class="modal fade" id="arrange_done_modal" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Warning</h5>
+					<button class="close" type="button" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					確定排課完成即<span style="color:red;">無法進行異動</span>，若有需要請聯絡管理員。
+				</div>
+				<div class="modal-footer">
+					<input type="hidden" name='openid'>
+					<button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+					<input type="submit" class="btn btn-warning" value="確定完成">
+					{% comment %} <input  class="btn btn-primary" href="#">確定</input> {% endcomment %}
+				</div>
+			</div>
+		</div>
+	</div>
+	</form>
+	<!-- ./排課完成 Modal -->
+
+	<!-- 刪除課程 Modal -->
+	<form action="/course/delete" method="POST"> {% csrf_token %}
+	<div class="modal fade" id="course_del_modal" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Warning</h5>
+					<button class="close" type="button" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					確定刪除課程？
+				</div>
+				<div class="modal-footer">
+					<input type="hidden" name='openid'>
+					<button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+					<input type="submit" class="btn btn-primary" value="確定">
+					{% comment %} <input  class="btn btn-primary" href="#">確定</input> {% endcomment %}
+				</div>
+			</div>
+		</div>
+	</div>
+	</form>
+	<!-- ./刪除課程 Modal -->
+
+	<!-- 修改課程 Modal -->
+	<form action="/course/update" method="POST"> {% csrf_token %}
+	<div class="modal fade" id="course_modify_modal" tabindex="-1" role="dialog">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Warning</h5>
+					<button class="close" type="button" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="card mb-3 course-setting">
+						<div class="card-header">課程</div>
+						<div class="card-body">
+							<div class="form-row">
+								<div class="form-group col-sm-4">
+									<label for="course_forwhom_modify">課程對象</label>
+									<select id="course_forwhom_modify" name="course.forwhom" class="form-control">
+										{% for whom in course_for %}
+											<option value="{{ whom.id }}">{{ whom.forwhom }}</option>
+										{% endfor %}
+									</select>
+								</div>
+								<div class="form-group col-sm-4">
+									<label for="course_name_modify">課程名稱</label>
+									<select id="course_name_modify" name="course.name" class="form-control">
+										<option value="0" disabled selected>--請選擇課程名稱--</option>
+									</select>
+								</div>
+								<div class="form-group col-sm-4">
+									<label for="course_isEng_modify">英語授課</label>
+									<select id="course_isEng_modify" name="course.isEng" class="form-control">
+										<option value="1">是</option>
+										<option value="0" selected>否</option>
+									</select>
+								</div>
+							</div>
+							<div class="form-row">
+								<div class="form-group col-sm-4">
+									<label for="course_place_modify">場地</label>
+									<select id="course_place_modify" name="course.place" class="form-control">
+										<option value="0" disabled selected>--請選擇場地--</option>
+									{% comment %} {% for place in places %}
+										<option value="{{ place.id }}">
+											{{ place.first_num }}. {{ place.place }}
+											{% if place.note %}
+												({{ place.note }})
+											{% endif %}
+										</option>
+									{% endfor %} {% endcomment %}
+									</select>
+								</div>
+								<div class="form-group col-sm-4">
+									<label for="course_week_modify">星期</label>
+									<select id="course_week_modify" name="course.week" class="form-control">
+										<option value="0" disabled selected>--請選擇星期--</option>
+									</select>
+								</div>
+								<div class="form-group col-sm-4">
+									<label for="course_time_modify">節次</label>
+									<select id="course_time_modify" name="course.time" class="form-control">
+										<option value="0" disabled selected>--請選擇節次--</option>
+									</select>
+								</div>
+							</div>
+							<span id="modify_err" style="color:red;display:none;">尚未進行修改</span>
+						</div>
+					</div>
+					<div class="card">
+						<div class="card-header" id="place_available_modify_header">場地使用狀況</div>
+						<div class="card-body">
+							<table class="table table-bordered" id="place_available_modify">
+								<thead>
+									<tr>
+										<th style="width:20%;">
+											<div class="slash">
+												<div class="slash01">節次</div>
+												<div class="slash02">星期</div>
+											</div>
+										</th>
+										{% for _ in r5 %}
+										<th style="width:16%">{% cycle '一' '二' '三' '四' '五' %}</th>
+										{% endfor %}
+									</tr>
+								</thead>
+								<tbody>
+									{% for _ in r5 %}
+									<tr>
+										<td>{% cycle '一二' '三四' '五六' '七八' '九十' %}</td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<input type="hidden" name='openid'>
+					<button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+					<input id="btn-modify-save" type="submit" class="btn btn-primary" value="修改">
+				</div>
+			</div>
+		</div>
+	</div>
+	</form>
+	<!-- ./修改課程 Modal -->
+	{% endif %}
+
 {% endblock content %}
 
 
 
 {% block style %}
+<link href="{% static 'select2/select2.min.css' %}" rel="stylesheet" />
+<link href="{% static 'select2/select2-bootstrap4.min.css' %}" rel="stylesheet" />
 <style>
-  table thead th, table tbody td {
-    vertical-align: middle!important;
-    text-align: center!important;
-  }
-  .slash{
-    position:relative;
-    width:100px;
-    height:40px;
-    box-sizing:border-box;
-    line-height:120px;
-    background: linear-gradient(45deg, transparent 49.5%, #212121 49.5%, transparent 50.5%, transparent 50.5%);
-  }
-  .slash01{
-    position: absolute;
-    top: -35px;
-  }
-  .slash02{
-    position: absolute;
-    top: -60px;
-    left: 60px;
-  }
+	table thead th, table tbody td {
+		vertical-align: middle!important;
+		text-align: center!important;
+	}
+	.slash{
+		position:relative;
+		width:100px;
+		height:40px;
+		box-sizing:border-box;
+		line-height:120px;
+		background: linear-gradient(45deg, transparent 49.5%, #212121 49.5%, transparent 50.5%, transparent 50.5%);
+	}
+	.slash01{
+		position: absolute;
+		top: -35px;
+	}
+	.slash02{
+		position: absolute;
+		top: -60px;
+		left: 60px;
+	}
 
-  .wrong {
-    border-color:#FF0000;
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 0, 0, 0.6);
-  }
+	.wrong {
+		border-color:#FF0000;
+		box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 0, 0, 0.6);
+	}
+
 </style>
 {% endblock style %}
 
-  
 {% block script %}
+{% if perms.app_getcontent.add_opencourse %}
+<script src="{% static 'select2/select2.min.js' %}"></script>
+
 <script>
-  $(document).ready(function(){
-    $("#mycourse>form").attr('action', rootURL + $("#mycourse>form").attr('action'));
+	
+	var already_arrange = {{already_arrange|safe}};
+		
+	$(document).ready(function(){
+		$("form").each(function(i){
+			$(this).attr('action', rootURL + $(this).attr('action'));
+		});
 
-    $("#course_place").change(function(){
-      $("#place_available>tbody>tr>td:nth-child(n+2)").text("");
-      $("#place_available_header").text("場地使用狀況 - " + $("#course_place option:selected").text());
-      $.ajax({
-        url : rootURL + '/content/available_place',
-        type: "GET",
-        data: {'place':$(this).val()},
-        dataType: 'json',
-        success: function(res){
-          unavailable_place = res['place_data'];
-          unavailable_place.forEach((d)=>{
-            $('#place_available > tbody > tr').eq(d['time']-1).find('td').eq(d['week']).text("已使用");
-          });
-        }
-      });
+		$("#course_forwhom, #course_forwhom_modify").change(function(){
+			var course_forwhom = $(this);
+			if (course_forwhom.attr('id')=='course_forwhom'){
+				var name = "#course_name";
+				var place = "#course_place";
+				var week = "#course_week";
+				var time = "#course_time";
+				var place_available = "#place_available";
+			}
+			else if(course_forwhom.attr('id')=='course_forwhom_modify'){
+				var name = "#course_name_modify";
+				var place = "#course_place_modify";
+				var week = "#course_week_modify";
+				var time = "#course_time_modify";
+				var place_available = "#place_available_modify";
+			}
 
-      $("#course_week>option").remove();   //
-      $("#course_week").append($("<option disabled selected></option>").attr("value", 0).text("--請選擇星期--"));
-      course_week_array.forEach((arg)=>{
-        $("#course_week").append($("<option></option>").attr("value", arg['val']).text(arg['text']));
-      });
-      $("#course_time>option").remove();   //
-      $("#course_time").append($("<option disabled selected></option>").attr("value", 0).text("--請選擇節次--"));
+			$(place+">option").remove();   //
+			$(place).append($("<option disabled selected></option>").attr("value", 0).text("--請選擇場地--"));
+			$(week+">option").remove();   //
+			$(week).append($("<option disabled selected></option>").attr("value", 0).text("--請選擇星期--"));
+			$(time+">option").remove();   //
+			$(time).append($("<option disabled selected></option>").attr("value", 0).text("--請選擇節次--"));
+			$(place_available + ">tbody>tr>td:nth-child(n+2)").text("");
+			$(place_available + "_header").text("場地使用狀況 - " + $(place + ">option:selected").text());
 
-    });
 
-    $("#course_week").change(function(){
-      let week = $(this).val();
-      $("#course_time>option").remove();   //
-      $("#course_time").append($("<option disabled selected></option>").attr("value", 0).text("--請選擇節次--"));
+			$.ajax({
+				url : rootURL + '/content/grade_course/',
+				type: "GET",
+				data: {'whom':$(this).val()},
+				dataType: 'json',
+				success: function(res){
+					// console.log(res)
+					$(name+">option").remove();   //
+					$(name).append($("<option disabled selected></option>").attr("value", 0).text("--請選擇課程名稱--"));
+					res['data'].forEach((arg)=>{
+						$(name).append($("<option></option>").attr("value", arg['id']).text(arg['course_name']));
+					});
+					if (name == "#course_name")
+						$(name).select2({
+							theme: 'bootstrap4',
+						})
+					else
+						$(name).select2({
+							theme: 'bootstrap4',
+							dropdownParent: $('#course_modify_modal')
+						})
+				}
+			});
+		});
 
-      let unavailable_time = unavailable_place.filter(
-        function(item, index, array){return item['week']== week;}).map(
-          function(i){return i['time'];});
+		$("#course_name, #course_name_modify").change(function(){
+			var course_name = $(this);
+			if (course_name.attr('id')=='course_name'){
+				var place = "#course_place";
+				var week = "#course_week";
+				var time = "#course_time";
+				var place_available = "#place_available"
+			}
+			else if(course_name.attr('id')=='course_name_modify'){
+				var place = "#course_place_modify"
+				var week = "#course_week_modify";
+				var time = "#course_time_modify";
+				var place_available = "#place_available_modify";
+			}
 
-      course_time_array.forEach((arg)=>{
-        if (!unavailable_time.includes(arg['val']))
-          $("#course_time").append($("<option></option>").attr("value", arg['val']).text(arg['text']));
-      });
+			$(week+">option").remove();   //
+			$(week).append($("<option disabled selected></option>").attr("value", 0).text("--請選擇星期--"));
+			$(time+">option").remove();   //
+			$(time).append($("<option disabled selected></option>").attr("value", 0).text("--請選擇節次--"));
+			$(place_available + ">tbody>tr>td:nth-child(n+2)").text("");
+			$(place_available + "_header").text("場地使用狀況 - " + $(place + ">option:selected").text());
 
-    });
+			$.ajax({
+				url : rootURL + '/content/course_place/',
+				type: "GET",
+				data: {'courseid':$(this).val()},
+				dataType: 'json',
+				success: function(res){
+					$(place+">option").remove();   //
+					$(place).append($("<option disabled selected></option>").attr("value", 0).text("--請選擇場地--"));
+					res['data'].forEach((arg)=>{
+						text = arg['first_num'] + ". " + arg['place']
+						if(arg['note'])
+							text += "(" + arg['note'] + ")"
+						$(place).append($("<option></option>").attr("value", arg['id']).text(text));
+					});
+									
+				}
+			});
 
-    $("#btn-save").click(function(e){
-      if(!(($("#course_place").val())&&($("#course_week").val())&&($("#course_time").val()))){
-        if ($("#course_place").val()==null){
-          $("#course_place").addClass('wrong');
-          setTimeout(function(){$("#course_place").removeClass('wrong');},2000);
-        }
-        if ($("#course_week").val()==null){
-          $("#course_week").addClass('wrong');
-          setTimeout(function(){$("#course_week").removeClass('wrong');},2000);
-        }
-        if ($("#course_time").val()==null){
-          $("#course_time").addClass('wrong');
-          setTimeout(function(){$("#course_time").removeClass('wrong');},2000);
-        }
-        e.preventDefault();
-      }
-    });
-  //   $("#btn-addCourse").click(function(){
-  //     $("#mycourse .course-setting.d-none").eq(0).removeClass("d-none");
-  //   });
+		});
 
-  //   $("#mycourse div.card-header button.close").click(function(){
-  //     console.log($(this))
-  //     if($("#mycourse .course-setting:not(.d-none)").length==1)
-  //       return 0;
-  //     else{
-  //       $(this).closest("div.card.course-setting").addClass("d-none");
-  //     }
-  //   });
-  });
+		$("#course_place, #course_place_modify").change(function(){
+			var course_new_or_modify = $(this);
+			if (course_new_or_modify.attr('id')=='course_place'){
+				var place = "#course_place"
+				var week = "#course_week";
+				var time = "#course_time";
+				var place_available = "#place_available"
+			}
+			else if(course_new_or_modify.attr('id')=='course_place_modify'){
+				var place = "#course_place_modify"
+				var week = "#course_week_modify";
+				var time = "#course_time_modify";
+				var place_available = "#place_available_modify"
+			}
+			$(place_available + ">tbody>tr>td:nth-child(n+2)").text("");
+			$(place_available + "_header").text("場地使用狀況 - " + $(place + ">option:selected").text());
+			$.ajax({
+				url : rootURL + '/content/available_place/',
+				type: "GET",
+				data: {'place':$(this).val()},
+				dataType: 'json',
+				success: function(res){
+					unavailable_place = res['place_data'];
+					unavailable_place.forEach((d)=>{
+						$(place_available +'> tbody > tr').eq(d['time']-1).find('td').eq(d['week']).text("已使用");
+					});
+					if(course_new_or_modify.attr('id')=='course_place_modify'){
+						for (var i in unavailable_place){
+							if(unavailable_place[i]['time']==modify_course['time']){
+								unavailable_place.splice(i,1);
+								break;
+							}
+						}
+					}
+				}
+			});
+
+
+
+			$(week+">option").remove();   //
+			$(week).append($("<option disabled selected></option>").attr("value", 0).text("--請選擇星期--"));
+			course_week_array.forEach((arg)=>{
+				$(week).append($("<option></option>").attr("value", arg['val']).text(arg['text']));
+			});
+			$(time+">option").remove();   //
+			$(time).append($("<option disabled selected></option>").attr("value", 0).text("--請選擇節次--"));
+
+		});
+
+		$("#course_week, #course_week_modify").change(function(){
+			if ($(this).attr('id')=='course_week'){
+				var time = "#course_time";
+			}
+			else if($(this).attr('id')=='course_week_modify'){
+				var time = "#course_time_modify";
+			}
+			let week_current = $(this).val();
+			$(time +">option").remove();   //
+			$(time).append($("<option disabled selected></option>").attr("value", 0).text("--請選擇節次--"));
+
+			let unavailable_time = unavailable_place.filter(
+				function(item, index, array){return item['week']== week_current;}).map(
+					function(i){return i['time'];});
+
+				//console.log(unavailable_time)
+			course_time_array.forEach((arg)=>{
+				if (!unavailable_time.includes(arg['val']))
+					$(time).append($("<option></option>").attr("value", arg['val']).text(arg['text']));
+			});
+			
+			already_arrange[week_current-1].forEach((arg)=>{
+				let option = $(time + ">option[value=" + arg + "]")
+				option.text(option.text() + ' (已排課)').prop('disabled', true);
+			});
+
+			if($(this).attr('id')=='course_week_modify'){
+				if($(this).val() == modify_course['week']){
+					var option = $("#course_time_modify option[value="+modify_course['time']+"]")
+					option.text(option.text().slice(0,2)).prop('selected', true).prop('disabled', false);
+				}
+			}
+
+
+
+		});
+
+		$("#btn-save").click(function(e){
+			if(!(($("#course_place").val())&&($("#course_week").val())&&($("#course_time").val()))){
+				if ($("#course_place").val()==null){
+					$("#course_place").addClass('wrong');
+					setTimeout(function(){$("#course_place").removeClass('wrong');},2000);
+				}
+				if ($("#course_week").val()==null){
+					$("#course_week").addClass('wrong');
+					setTimeout(function(){$("#course_week").removeClass('wrong');},2000);
+				}
+				if ($("#course_time").val()==null){
+					$("#course_time").addClass('wrong');
+					setTimeout(function(){$("#course_time").removeClass('wrong');},2000);
+				}
+				e.preventDefault();
+			}
+		});
+
+		$("#btn-modify-save").click(function(e){
+			if ($("#course_forwhom_modify").val()==modify_course['forwhom'] &&
+				$("#course_name_modify").val()==modify_course['courseid'] &&
+				$("#course_isEng_modify").val()==modify_course['isEng'] &&
+				$("#course_place_modify").val()==modify_course['place'] &&
+				$("#course_week_modify").val()==modify_course['week'] &&
+				$("#course_time_modify").val()==modify_course['time']){
+				
+				$("#modify_err").show();
+				e.preventDefault();
+			}
+			else
+				$("#modify_err").hide();
+
+		});
+
+		$("#course_modify_modal select").change(function(){
+			$("#modify_err").hide();
+		})
+
+		$(".course_del").click(function(){
+			$("#course_del_modal .modal-footer input[name='openid']").attr('value', $(this).data('openid'));
+		});
+
+		$(".course_modify").click(function(){
+			$("#course_modify_modal .modal-footer input[name='openid']").attr('value', $(this).data('openid'));
+			modify_course['courseid'] = $(this).data('courseid');
+			modify_course['forwhom'] = $(this).data('forwhom');
+			modify_course['isEng'] = $(this).data('iseng');
+			modify_course['place'] = $(this).data('place');
+			modify_course['week'] = $(this).data('week');
+			modify_course['time'] = $(this).data('time');
+
+			$("#course_forwhom_modify option[value="+modify_course['forwhom']+"]").prop('selected', true);
+			$("#course_forwhom_modify").trigger('change');
+			setTimeout(function(){
+				$("#course_name_modify").val(modify_course['courseid']).trigger('change');
+				$("#course_name_modify").trigger('change');
+				setTimeout(function(){
+					$("#course_place_modify option[value="+modify_course['place']+"]").prop('selected', true);
+					$("#course_place_modify").trigger('change');
+					setTimeout(function(){
+						$("#course_week_modify option[value="+modify_course['week']+"]").prop('selected', true);
+						$("#course_week_modify").trigger('change');
+					},50)
+				},50)
+			},50)
+			$("#course_isEng_modify option[value="+modify_course['isEng']+"]").prop('selected', true);
+		});
+	});
 </script>
+{% endif %}
+
 {% endblock script %}
 

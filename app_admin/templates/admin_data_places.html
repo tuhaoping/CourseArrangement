@@ -1,0 +1,198 @@
+{% extends "admin_base.html" %}
+{% load static %}
+
+{% block content %}
+<ol class="breadcrumb">
+	<li class="breadcrumb-item">
+	  <a href="#">資料管理</a>
+	</li>
+	<li class="breadcrumb-item active">場地管理</li>
+</ol>
+
+<div class="card mb-3">
+	<div class="card-header">場地列表 ( <a id="place_add" href="#" data-toggle="modal" data-target="#place_add_modal"><i class="fa fa-plus"></i> 新增場地</a> )</div>
+	<div class="card-body">
+		<table class="table table-hover table-bordered m-0" id="placelist">
+			<thead>
+				<tr>
+					<th>代號</th>
+					<th>編號</th>
+					<th>名稱</th>
+					<th>備註</th>
+					<th>其他</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for place in places %}
+				<tr>
+					<td>{{ place.first_num }}</td>
+					<td>{{ place.second_num }}</td>
+					<td>{{ place.place }}</td>
+					<td>{% if place.note %}{{ place.note }}{% endif %}</td>
+					<td>
+						<a class="place_modify" href="#" data-toggle="modal" data-target="#place_modify_modal" data-placeid="{{place.id}}">修改</a>
+						<a class="place_del" href="#" data-toggle="modal" data-target="#place_del_modal" data-placeid="{{place.id}}">刪除</a>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+
+<!-- 刪除場地 Modal -->
+<form action="/admin/data/places/remove/" method="POST"> {% csrf_token %}
+	<div class="modal fade" id="place_del_modal" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Warning</h5>
+					<button class="close" type="button" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					確定移除該場地？ <br>
+					將會移除該場地所有開課相關資料。
+				</div>
+				<div class="modal-footer">
+					<input type="hidden" name='placeid'>
+					<button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+					<input type="submit" class="btn btn-primary" value="確定">
+				</div>
+			</div>
+		</div>
+	</div>
+</form>
+<!-- ./刪除場地 Modal -->
+
+
+<!-- 修改場地 Modal -->
+<form action="/admin/data/places/modify/" method="POST"> {% csrf_token %}
+	<div class="modal fade" id="place_modify_modal" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document" style="max-width:50%;">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">修改場地資料</h5>
+					<button class="close" type="button" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="form-group row">
+						<label for="inputFirstTitle_modify" class="col-sm-2 col-form-label">場地代號</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="inputFirstTitle_modify" placeholder="場地代號" name="firstTitle" required>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="inputSecondTitle_modify" class="col-sm-2 col-form-label">場地編號</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="inputSecondTitle_modify" placeholder="場地編號" name="secondTitle" required>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="inputName_modify" class="col-sm-2 col-form-label">場地名稱</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="inputName_modify" placeholder="場地名稱" name="name" required>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="inputNote_modify" class="col-sm-2 col-form-label">備註</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="inputNote_modify" placeholder="備註" name="note">
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<input type="hidden" name='placeid'>
+					<button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+					<input id="add_submit" type="submit" class="btn btn-primary" value="確定修改">
+				</div>
+			</div>
+		</div>
+	</div>
+</form>
+<!-- ./新增場地 Modal -->
+
+
+<!-- 新增場地 Modal -->
+<form action="/admin/data/places/add/" method="POST"> {% csrf_token %}
+	<div class="modal fade" id="place_add_modal" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document" style="max-width:50%;">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">新增場地資料</h5>
+					<button class="close" type="button" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="form-group row">
+						<label for="inputFirstTitle" class="col-sm-2 col-form-label">場地代號</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="inputFirstTitle" placeholder="場地代號" name="firstTitle" required>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="inputSecondTitle" class="col-sm-2 col-form-label">場地編號</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="inputSecondTitle" placeholder="場地編號" name="secondTitle" required>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="inputName" class="col-sm-2 col-form-label">場地名稱</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="inputName" placeholder="場地名稱" name="name" required>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="inputNote" class="col-sm-2 col-form-label">備註</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="inputNote" placeholder="備註" name="note">
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+					<input id="add_submit" type="submit" class="btn btn-primary" value="確定新增">
+				</div>
+			</div>
+		</div>
+	</div>
+</form>
+<!-- ./新增場地 Modal -->
+{% endblock content %}
+
+{% block style %}
+{% endblock style %}
+
+{% block script %}
+<script>
+	$(document).ready(function() {
+		$("form").each(function(i){
+			$(this).attr('action', rootURL + $(this).attr('action'));
+		});
+		
+		$('#placelist').DataTable({
+			ordering:false
+		});
+		$("#placelist").on('click', 'a.place_del', function(){
+			$("#place_del_modal .modal-footer input[name='placeid']").attr('value', $(this).data('placeid'));
+		})
+
+		$("#placelist").on('click', 'a.place_modify', function(){
+			$("#place_modify_modal .modal-footer input[name='placeid']").attr('value', $(this).data('placeid'));
+			var row_td = $(this).closest('tr').find('td')
+			var first_num = row_td.eq(0).text();
+			var second_num = row_td.eq(1).text();
+			var name = row_td.eq(2).text();
+			var note = row_td.eq(3).text();
+			$("#inputFirstTitle_modify").val(first_num);
+			$("#inputSecondTitle_modify").val(second_num);
+			$("#inputName_modify").val(name);
+			$("#inputNote_modify").val(note);
+		})
+	});
+</script>
+{% endblock script %}

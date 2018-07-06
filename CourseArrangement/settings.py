@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app_getcontent',
+    'app_admin',
 ]
 
 MIDDLEWARE = [
@@ -134,3 +135,12 @@ STATICFILES_DIRS = (
 )
 
 # STATIC_ROOT = '/static/'
+SESSION_COOKIE_AGE = 86400
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+  
+EMAIL_HOST = 'email.ncku.edu.tw'
+EMAIL_PORT = 25
+EMAIL_HOST_USER = 'em50380'
+EMAIL_HOST_PASSWORD = 'pe#em50380'
+DEFAULT_FROM_EMAIL = 'em50380 <em50380@email.ncku.edu.tw>'

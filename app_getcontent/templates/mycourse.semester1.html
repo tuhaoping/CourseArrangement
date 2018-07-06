@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% load app_getcontent_filter %}
+
+
+{% block content %}
+	<ol class="breadcrumb">
+		<li class="breadcrumb-item">
+			<a href="#">我的排課</a>
+		</li>
+		<li class="breadcrumb-item active">大一體育排課</li>
+	</ol>
+
+	<div class="card mb-3">
+		<div class="card-header">已開設課程 &nbsp;&nbsp;
+			( 大一：{{courses.count}} )
+		</div>
+		<div class="card-body">
+			<table class="table table-hover table-bordered">
+				<thead>
+					<tr>
+						<th class="text-center">系所</th>
+						<th class="text-center">英語授課</th>
+						<th class="text-center">星期</th>
+						<th class="text-center">節次</th>
+						{% if perms.app_getcontent.add_opencourse %}
+						<th class="text-center">其他</th>
+						{% endif %}
+
+					</tr>
+				</thead>
+				<tbody>
+					{% if courses %}
+						{% for course in courses %}
+						<tr>
+							<td class="text-center">{{ course.dep}}</td>
+							{% if course.isEng %}
+							<td class="text-center">是</td>
+							{% else %}
+							<td class="text-center">否</td>
+							{% endif %}
+							<td class="text-center">{{ course.week }}</td>
+							<td class="text-center">{{ course.time|course_time }}</td>
+							{% if perms.app_getcontent.add_opencourse %}
+							<td class="text-center">
+								<a class="course_del" href="#" data-toggle="modal" data-target="#course_del_modal" data-courseid="{{course.id}}">刪除</a>
+							</td>
+							{% endif %}
+						</tr>
+						{% endfor %}
+					{% else %}
+						{% if perms.app_getcontent.add_opencourse %}
+						<tr><td colspan="5" class="text-center">無已開設課程</td></tr>
+						{% else %}
+						<tr><td colspan="4" class="text-center">無已開設課程</td></tr>
+						{% endif %}
+					{% endif %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<hr>
+
+	{% if perms.app_getcontent.add_opencourse %}
+	<form action="/mycourse/grade1/update/" method="POST"> {% csrf_token %}
+	<div class="card mb-3">
+		<div class="card-header">大一各班體育時間表</div>
+		<div class="card-body">
+			<div class="float-right mb-1">
+				英語授課：
+				<div class="d-inline-block">
+					<label class="checkbox-container">是
+						<input type="radio" class="select-course-item" value="1" name="iseng">
+						<span class="checkmark radio"></span>
+					</label>
+				</div>
+				<div class="d-inline-block">
+					<label class="checkbox-container">否
+						<input type="radio" class="select-course-item" value="0" name="iseng" checked>
+						<span class="checkmark radio"></span>
+					</label>
+				</div>
+			</div>
+			<br>
+			<table class="table table-bordered" id="course_schedule">
+				<thead>
+					<tr>
+						<th style="width:10%;">
+							<div class="slash mx-auto">
+								<div class="slash01">節次</div>
+								<div class="slash02">星期</div>
+							</div>
+						</th>
+						{% for _ in r5 %}
+						<th class="text-center" style="width:16%">{% cycle '一' '二' '三' '四' '五' %}</th>
+						{% endfor %}
+					</tr>
+				</thead>
+				<tbody>
+					{% for course_time in grade1_courses %}
+					<tr>
+						<td class="text-center">{% cycle '一二' '三四' '五六' '七八' '九十' %}</td>
+						{% for course_week in course_time %}
+						<td>
+							{% for course in course_week %}
+								{% if course.teacher.userid.first_name == user_firstname %}
+									<div class="course_selected teacher_choice">{{course.teacher}}，{{course.dep}}</div>
+								{% elif course.teacher %}
+									<div class="course_selected">{{course.teacher}}，{{course.dep}}</div>
+								{% else %}
+									<div class="course_unselected">
+									<label class="checkbox-container">{{course.dep}}
+										<input type="checkbox" class="select-course-item" value="{{course.id}}" name="courseid">
+										<span class="checkmark"></span>
+									</label>
+								</div>
+								{% endif %}
+							{% endfor %}
+						</td>
+						{% endfor %}
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		<div class="card-footer text-center"><input type="submit" class="btn btn-primary" value="確定"></div>
+	</div>
+	</form>
+	{% endif %}
+	
+	<!-- 刪除課程 Modal -->
+	{% if perms.app_getcontent.add_opencourse %}
+	<form action="/mycourse/grade1/delete/" method="POST"> {% csrf_token %}
+	<div class="modal fade" id="course_del_modal" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Warning</h5>
+					<button class="close" type="button" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					確定刪除課程？
+				</div>
+				<div class="modal-footer">
+					<input type="hidden" name='courseid'>
+					<button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+					<input type="submit" class="btn btn-primary" value="確定">
+				</div>
+			</div>
+		</div>
+	</div>
+	</form>
+	{% endif %}
+	<!-- ./刪除課程 Modal -->
+
+{% endblock content %}
+
+
+
+{% block style %}
+<style>
+	table thead th, table tbody td {
+		vertical-align: middle!important;
+	}
+	.slash{
+		position:relative;
+		width:100px;
+		height:40px;
+		box-sizing:border-box;
+		line-height:120px;
+		background: linear-gradient(45deg, transparent 49.5%, #212121 49.5%, transparent 50.5%, transparent 50.5%);
+	}
+	.slash01{
+		position: absolute;
+		top: -35px;
+	}
+	.slash02{
+		position: absolute;
+		top: -60px;
+		left: 60px;
+	}
+
+	.wrong {
+		border-color:#FF0000;
+		box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 0, 0, 0.6);
+	}
+
+	#course_schedule div.course_selected{
+		background-color:#ff000030;
+		margin:2px;
+		padding:5px 10px;
+	}
+	#course_schedule div.course_unselected{
+		background-color:#00ff7230;
+		margin:2px;
+		padding:2px;
+	}
+	#course_schedule div.course_unselected.not_avaliable{
+		background-color:#e9dc2dda;
+		margin:2px;
+		padding:2px;
+		pointer-events: none;
+		opacity: 0.5;
+	}
+</style>
+{% endblock style %}
+
+
+{% block script %}
+<script>
+	$(document).ready(function(){
+		$("form").each(function(i){
+			$(this).attr('action', rootURL + $(this).attr('action'));
+		});
+
+		$("#course_schedule input.select-course-item").change(function(){
+			if($(this).prop('checked')){
+				$(this).closest('td').find('input').prop('checked', false);
+				$(this).prop('checked',true);
+			}
+		});
+
+		$(".course_del").click(function(){
+			$("#course_del_modal .modal-footer input[name='courseid']").attr('value', $(this).data('courseid'));
+		});
+
+		
+		$("#course_schedule tbody div.teacher_choice").siblings('div.course_unselected').addClass('not_avaliable')
+		
+		{% for course in grade2_courses %}
+			$("#course_schedule tbody").find('tr').eq({{course.time}}-1).find('td').eq({{course.week}}).find('.course_unselected').addClass('not_avaliable');
+		{% endfor %}
+			
+	});
+</script>
+{% endblock script %}
+

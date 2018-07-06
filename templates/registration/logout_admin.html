@@ -9,15 +9,13 @@
   <link href="{% static 'css/sb-admin.css' %}" rel="stylesheet">
 </head>
 <body class="bg-dark">
+  <div class="text-center"><h1 style="color:white">國立成功大學體育排課後台系統</h1></div>
   <div class="container">
-    <div class="text-center"><h1 style="color:white">國立成功大學體育排課系統</h1></div>
     <div class="card card-login mx-auto mt-5">
       <div class="card-header">登入</div>
       <div class="card-body">
-        {% if form.errors %}
-          <p><span style="color:red">帳號或密碼輸入錯誤。</span></p>
-        {% endif %}
-        <form action="" method="post">
+		    <p><span style="color:red">您已經登出。</span></p>
+        <form action="/admin/accounts/login/" method="post">
           {% csrf_token %}
           <div class="form-group">
             <label for="username">用戶名稱</label>

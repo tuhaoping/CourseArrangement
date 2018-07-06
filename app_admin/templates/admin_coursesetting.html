@@ -1,0 +1,239 @@
+{% extends "admin_base.html" %}
+{% load static %}
+
+{% block content %}
+<ol class="breadcrumb">
+	<li class="breadcrumb-item">
+	  <a href="#">排課設定</a>
+	</li>
+</ol>
+
+<div class="card mb-4">
+	<div class="card-body">
+		<div class="form-group row m-0">
+			<label for="semester" class="col-sm-2 col-form-label">學期</label>
+			<div class="col-sm-3">
+				<select name="semester" id="semester" class="form-control">
+					{% if semester == '1' %}
+						<option value="1" selected>上</option>
+						<option value="2">下</option>
+					{% else %}
+						<option value="1">上</option>
+						<option value="2" selected>下</option>
+					{% endif %}
+				</select>
+			</div>
+		</div>
+		<div class="form-group row m-0">
+			<label class="col-sm-2 col-form-label">自動寄送通知郵件</label>
+			<div class="col-sm-3 my-auto">
+				<label class="switch" style="margin-bottom:-7px;">
+					{% if automail %}
+					<input type="checkbox" id="automail" value="1" checked>
+					{% else %}
+					<input type="checkbox" id="automail" value="0">
+					{% endif %}
+					<span class="slider round"></span>
+				</label>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<form action="/admin/coursesetting/update/" method="POST"> {% csrf_token %}
+<div class="card mb-3">
+	<div class="card-body row">
+		<div class="col-6">
+			<div class="card mb-4">
+				<div class="card-header">開課班級數量</div>
+				<div class="card-body">
+					<table class="table table-border table-hover m-0">
+						<thead>
+							<tr>
+								<th style="width:10%;"></th>
+								{% for _ in r5 %}
+								<th class="text-center">{% cycle '一' '二' '三' '四' '五' %}</th>
+								{% endfor %}
+							</tr>
+						</thead>
+						<tbody>
+							{% for course in need_open %}
+							<tr>
+								<td>{{ course.grade }}</td>
+								<td><input type="text" class="form-control text-center" value="{{ course.mon }}" name="need{{course.id}}"></td>
+								<td><input type="text" class="form-control text-center" value="{{ course.tue }}" name="need{{course.id}}"></td>
+								<td><input type="text" class="form-control text-center" value="{{ course.wed }}" name="need{{course.id}}"></td>
+								<td><input type="text" class="form-control text-center" value="{{ course.thu }}" name="need{{course.id}}"></td>
+								<td><input type="text" class="form-control text-center" value="{{ course.fri }}" name="need{{course.id}}"></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		{% if semester == '1' %}
+		<div class="col-6">
+			<div class="card mb-4">
+				<div class="card-header">大一課程時間設定</div>
+				<div class="card-body" style="overflow-y:auto; height:400px;">
+					<table class="table table-border table-hover m-0">
+						<thead>
+							<tr>
+								<th style="width:20%;"></th>
+								<th class="text-center">教師</th>
+								<th class="text-center">星期</th>
+								<th class="text-center">節次</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for grade in grade1_course %}
+							<tr>
+								<td>{{ grade.dep }}</td>
+								<td>
+									<select class="form-control" name="teacher">
+										<option value="0">無</option>
+										{% for teacher in teachers %}
+										<option value="{{teacher.userid.id}}" {% if grade.teacher.userid.id == teacher.userid.id %}selected{% endif %}>{{teacher.userid.last_name}}{{teacher.userid.first_name}}</option>
+										{% endfor %}
+									</select>
+								</td>
+								<td>
+									<select class="form-control" name="grade_week">
+										<option value="1" {% if grade.week == 1 %}selected{% endif %}>星期一</option>
+										<option value="2" {% if grade.week == 2 %}selected{% endif %}>星期二</option>
+										<option value="3" {% if grade.week == 3 %}selected{% endif %}>星期三</option>
+										<option value="4" {% if grade.week == 4 %}selected{% endif %}>星期四</option>
+										<option value="5" {% if grade.week == 5 %}selected{% endif %}>星期五</option>
+									</select>
+								</td>
+								<td>
+									<select class="form-control" name="grade_time">
+										<option value="1" {% if grade.time == 1 %}selected{% endif %}>一二</option>
+										<option value="2" {% if grade.time == 2 %}selected{% endif %}>三四</option>
+										<option value="3" {% if grade.time == 3 %}selected{% endif %}>五六</option>
+										<option value="4" {% if grade.time == 4 %}selected{% endif %}>七八</option>
+										<option value="5" {% if grade.time == 5 %}selected{% endif %}>九十</option>
+									</select>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		{% endif %}
+	</div>
+	<div class="card-footer text-center">
+		<input type="submit" class="btn btn-primary" value="儲存">
+	</div>
+</div>
+</form>
+
+
+<div class="modal fade" id="semester_change_warning" tabindex="-1" role="dialog">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Warning</h5>
+				<button class="close" type="button" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">×</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				學期更動將會初始化所有排課狀態 (<span style="color:red;">刪除目前所有排課紀錄</span>) <br><br>
+				確定要進行更動嗎？
+			</div>
+			<div class="modal-footer">
+				<input type="hidden" name='openid'>
+				<button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
+				<button id="semester-save" type="button" class="btn btn-warning" data-dismiss="modal">確定更動</button>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}
+
+{% block style %}
+<style>
+	.slash{
+		position:relative;
+		width:100px;
+		height:40px;
+		box-sizing:border-box;
+		line-height:120px;
+		background: linear-gradient(45deg, transparent 49.5%, #212121 49.5%, transparent 50.5%, transparent 50.5%);
+	}
+	.slash01{
+		position: absolute;
+		top: -35px;
+	}
+	.slash02{
+		position: absolute;
+		top: -60px;
+		left: 60px;
+	}
+	#place_available>tbody>tr>td:nth-child(n+2) {
+		background-color: #d9ffb3;
+	}
+	td.used {
+		background-color: #ffcccc!important;
+	}
+</style>
+{% endblock style %}
+
+{% block script %}
+<script>
+	$(document).ready(function() {
+		$("form").each(function(i){
+			$(this).attr('action', rootURL + $(this).attr('action'));
+		});
+
+		$("#automail").change(function(){
+			var val = 0;
+			if ($(this).prop('checked'))
+				val = 1;
+
+			$.ajax({
+				url : rootURL + '/admin/changesetting/',
+				type: "POST",
+				data: {
+					csrfmiddlewaretoken: '{{ csrf_token }}',
+					item: 2,
+					value: val,
+				},
+				error:function(){
+					alert('Error');
+				}
+			});
+		});
+
+		var semester = $("#semester option:selected");
+		$("#semester").change(function(event){
+			$("#semester_change_warning").modal('show');
+			semester.prop('selected', true)
+		});
+		$("#semester-save").click(function(){
+			semester = semester.siblings('option');
+			semester.prop('selected', true);
+			$.ajax({
+				url : rootURL + '/admin/changesetting/',
+				type: "POST",
+				data: {
+					csrfmiddlewaretoken: '{{ csrf_token }}',
+					item: 1,
+					value: $("#semester").val(),
+				},
+				success:function(){
+					window.location.reload();
+				},
+				error:function(){
+					alert('Error');
+				}
+			});
+		});
+	});
+</script>
+{% endblock script %}

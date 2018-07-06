@@ -1,0 +1,118 @@
+{% extends "admin_base.html" %}
+{% load static %}
+
+{% block content %}
+<ol class="breadcrumb">
+	<li class="breadcrumb-item">
+	  <a href="#">排課情形</a>
+	</li>
+	<li class="breadcrumb-item active">場地排課情形</li>
+</ol>
+
+<div class="card mb-3" style="height:calc(100vh - 220px);">
+	<div class="card-body row">
+		<div class="col-2">
+			<div class="list-group" role="tablist" id="placeMenu" style="overflow-y:scroll; max-height:100%;">
+			{% for place in places %}
+				<div class="list-group-item list-group-item-action text-center" data-toggle="list" role="tab" style="cursor:pointer;" data-placeid="{{place.id}}">{{ place.first_num }}. {{ place.place }}</div>
+			{% endfor %}
+			</div>
+		</div>
+		<div class="col-10">
+			<div class="card" style="min-height:100%;">
+				<div class="card-body">
+					<span id="pleasechoic">請選擇場地</span>
+					<div class="card" id="place_use_status" style="display:none;">
+						<div class="card-header" id="place_available_header">場地使用狀況</div>
+						<div class="card-body">
+							<table class="table table-bordered" id="place_available">
+								<thead>
+									<tr>
+										<th style="width:15%;">
+											<div class="slash">
+												<div class="slash01">節次</div>
+												<div class="slash02">星期</div>
+											</div>
+										</th>
+										{% for _ in r5 %}
+										<th style="width:17%">{% cycle '一' '二' '三' '四' '五' %}</th>
+										{% endfor %}
+									</tr>
+								</thead>
+								<tbody>
+									{% for _ in r5 %}
+									<tr>
+										<td>{% cycle '一二' '三四' '五六' '七八' '九十' %}</td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>	
+			</div>
+		</div>
+	</div>
+</div>
+
+
+{% endblock content %}
+
+{% block style %}
+
+<style>
+	.slash{
+		position:relative;
+		width:100px;
+		height:40px;
+		box-sizing:border-box;
+		line-height:120px;
+		background: linear-gradient(45deg, transparent 49.5%, #212121 49.5%, transparent 50.5%, transparent 50.5%);
+	}
+	.slash01{
+		position: absolute;
+		top: -35px;
+	}
+	.slash02{
+		position: absolute;
+		top: -60px;
+		left: 60px;
+	}
+	#place_available>tbody>tr>td:nth-child(n+2) {
+		background-color: #d9ffb3;
+	}
+	td.used {
+		background-color: #ffcccc!important;
+	}
+</style>
+{% endblock style %}
+
+{% block script %}
+<script>
+	$(document).ready(function() {
+		$("#placeMenu div.list-group-item").click(function(){
+			$("#pleasechoic").hide();
+			$("#place_use_status").show();
+			var placeid = $(this).data('placeid');
+			$("#place_available>tbody>tr>td:nth-child(n+2)").text("").removeClass('used');
+			$("#place_available_header").text("場地使用狀況 - " + $(this).text());
+			$.ajax({
+				url : rootURL + '/admin/placeuse',
+				type: "GET",
+				data: {'placeid':placeid},
+				dataType: 'json',
+				success: function(res){
+					res['data'].forEach(function(d){
+						$('#place_available > tbody > tr').eq(d['time']-1).find('td').eq(d['week']).html(d['teacher'] + "<br>" + d['course']).addClass('used');
+					})
+				}
+			})
+		});
+	});
+</script>
+{% endblock script %}
